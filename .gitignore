@@ -8,6 +8,7 @@ package-lock.json
 
 # typescript
 dist/
+tsconfig.tsbuildinfo
 
 # misc
 .vsls.json

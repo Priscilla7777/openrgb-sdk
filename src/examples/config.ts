@@ -1,0 +1,1 @@
+export default [ 'Example', 6742, 'localhost'] as [ string, number, string]

@@ -49,8 +49,8 @@ export function HSLColor (h: number, s: number, l: number): RGBColor {
 			return p
 		}
 
-		let q = l < 0.5 ? l * (1 + s) : l + s - l * s
-		let p = 2 * l - q
+		const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+		const p = 2 * l - q
 
 		r = h2rgb(p, q, h + 1/3)
 		g = h2rgb(p, q, h)
@@ -74,18 +74,38 @@ export function HSVColor (h: number, s: number, v: number): RGBColor {
 
 	if (s != 0) {
 		h /= 60
-		let i = Math.floor(h)
-		let f = h - i
-		let p = v * (1 - s)
-		let q = v * (1 - s * f)
-		let t = v * (1 - s * (1 - f))
+		const i = Math.floor(h)
+		const f = h - i
+		const p = v * (1 - s)
+		const q = v * (1 - s * f)
+		const t = v * (1 - s * (1 - f))
 
 		switch (i) {
-			case 0: r = v, g = t, b = p; break
-			case 1: r = q, g = v, b = p; break
-			case 2: r = p, g = v, b = t; break
-			case 3: r = p, g = q, b = v; break
-			case 4: r = t, g = p, b = v; break
+			case 0: 
+				r = v;
+				g = t;
+				b = p; 
+				break;
+			case 1: 
+				r = q;
+				g = v;
+				b = p; 
+				break
+			case 2: 
+				r = p;
+				g = v;
+				b = t; 
+				break
+			case 3: 
+				r = p;
+				g = q;
+				b = v; 
+				break
+			case 4: 
+				r = t;
+				g = p;
+				b = v; 
+				break
 		}
 	} else r = g = b = v;
 

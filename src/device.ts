@@ -73,22 +73,22 @@ export default class Device {
 		this.type = buffer.readInt32LE(offset)
 		offset += 4;
 
-		let { text: nameText, length: nameLength } = readString(buffer, offset)
+		const { text: nameText, length: nameLength } = readString(buffer, offset)
 		offset += nameLength
 
 		if (protocolVersion >= 1) {
-			let { text: vendorText, length: vendorLength } = readString(buffer, offset)
+			const { text: vendorText, length: vendorLength } = readString(buffer, offset)
 			offset += vendorLength
 			this.vendor = vendorText
 		}
 
-		let { text: descriptionText, length: descriptionLength } = readString(buffer, offset)
+		const { text: descriptionText, length: descriptionLength } = readString(buffer, offset)
 		offset += descriptionLength
-		let { text: versionText, length: versionLength } = readString(buffer, offset)
+		const { text: versionText, length: versionLength } = readString(buffer, offset)
 		offset += versionLength
-		let { text: serialText, length: serialLength } = readString(buffer, offset)
+		const { text: serialText, length: serialLength } = readString(buffer, offset)
 		offset += serialLength
-		let { text: locationText, length: locationLength } = readString(buffer, offset)
+		const { text: locationText, length: locationLength } = readString(buffer, offset)
 		offset += locationLength
 
 		this.name = nameText
@@ -141,13 +141,13 @@ function readModes (buffer: Buffer, modeCount: number, offset: number, protocolV
 	const modes: Mode[] = []
 	for (let modeIndex = 0; modeIndex < modeCount; modeIndex++) {
 
-		let { text: modeName, length: modeNameLength } = readString(buffer, offset)
+		const { text: modeName, length: modeNameLength } = readString(buffer, offset)
 		offset += modeNameLength
 
-		let modeValue = buffer.readInt32LE(offset)
+		const modeValue = buffer.readInt32LE(offset)
 		offset += 4
 
-		let modeFlags 	= buffer.readUInt32LE(offset)
+		const modeFlags 	= buffer.readUInt32LE(offset)
 		let speedMin 	= buffer.readUInt32LE(offset + 4)
 		let speedMax 	= buffer.readUInt32LE(offset + 8)
 
@@ -170,21 +170,21 @@ function readModes (buffer: Buffer, modeCount: number, offset: number, protocolV
 		}
 
 		let direction 	= buffer.readUInt32LE(offset + 24)
-		let colorMode 	= buffer.readUInt32LE(offset + 28)
+		const colorMode 	= buffer.readUInt32LE(offset + 28)
 
 		offset += 32
 
 		let colorLength = buffer.readUInt16LE(offset)
 		offset += 2
 
-		let colors: RGBColor[] = []
+		const colors: RGBColor[] = []
 
-		let flagList: string[] = []
+		const flagList: string[] = []
 
 		const flags = ["speed", "directionLR", "directionUD", "directionHV", "brightness", "perLedColor", "modeSpecificColor", "randomColor", "manualSave", "automaticSave"]
 
-		let flagcheck_str: string = modeFlags.toString(2)
-		let flagcheck: string[] = Array(flags.length - flagcheck_str.length).concat(flagcheck_str.split("")).reverse()
+		const flagcheck_str: string = modeFlags.toString(2)
+		const flagcheck: string[] = Array(flags.length - flagcheck_str.length).concat(flagcheck_str.split("")).reverse()
 
 		flagcheck.forEach((el, i) => {
 			if (el == "1") flagList.push(flags[i] as string)
@@ -221,7 +221,7 @@ function readModes (buffer: Buffer, modeCount: number, offset: number, protocolV
 			offset += 4;
 		}
 
-		let mode: Mode = {
+		const mode: Mode = {
 			id: modeIndex,
 			name: modeName,
 			value: modeValue,
@@ -265,7 +265,7 @@ function readZones (buffer: Buffer, zoneCount: number, offset: number, protocolV
 
 		const resizable = !(ledsMin == ledsMax)
 
-		let matrixSize = buffer.readUInt16LE(offset)
+		const matrixSize = buffer.readUInt16LE(offset)
 		offset+=2
 		let matrix: Matrix|undefined
 		if (matrixSize) {
@@ -282,7 +282,7 @@ function readZones (buffer: Buffer, zoneCount: number, offset: number, protocolV
 			for (let index = 0; index < matrix.height; index++) {
 				matrix.keys[index] = []
 				for (let i = 0; i < matrix.width; i++) {
-					let led = buffer.readUInt32LE(offset)
+					const led = buffer.readUInt32LE(offset)
 					matrix.keys[index]!.push(led != 0xFFFFFFFF ? led : undefined)
 					offset += 4
 				}
@@ -295,7 +295,7 @@ function readZones (buffer: Buffer, zoneCount: number, offset: number, protocolV
 			const segmentCount = buffer.readUInt16LE(offset)
 			offset += 2
 			for (let i = 0; i < segmentCount; i++) {
-				let name = readString(buffer, offset)
+				const name = readString(buffer, offset)
 				offset += name.length
 				segments.push({
 					name: name.text,
@@ -307,7 +307,7 @@ function readZones (buffer: Buffer, zoneCount: number, offset: number, protocolV
 			}
 		}
 
-		let zone: Zone = {
+		const zone: Zone = {
 			name: zoneName,
 			id: zoneIndex,
 			type: zoneType,

@@ -1,8 +1,7 @@
 import EventEmitter from "events"
 import { Socket } from "net"
 
-// bufferpack does not have type declarations
-// @ts-expect-error
+// @ts-expect-error bufferpack does not have type declarations
 import bufferpack from "bufferpack"
 
 import * as utils from "./utils.js"
@@ -82,7 +81,7 @@ export default class Client extends EventEmitter {
 	async connect (timeout: number = 1000) {
 		this.socket = new Socket()
 
-		let connectionPromise = Promise.race([
+		const connectionPromise = Promise.race([
 			new Promise((resolve) => this.socket!.once("connect", resolve)),
 			new Promise((resolve) => this.socket!.once("error", resolve)),
 			new Promise((resolve) => setTimeout(() => resolve("timeout"), timeout))
@@ -90,7 +89,7 @@ export default class Client extends EventEmitter {
 
 		this.socket!.connect(this.port, this.host)
 
-		let res = await connectionPromise
+		const res = await connectionPromise
 
 		if (res == "timeout") throw new Error("timeout")
 
@@ -117,7 +116,7 @@ export default class Client extends EventEmitter {
 				// if the packet couldn't be read the first time (the reason why that could happen is described in the next block),
 				// the packet length will be taken over in to the next `readable call` to then try and read the whole package
 				if (this.currentPacketLength == 0) {
-					let header = this.socket!.read(HEADER_SIZE)
+					const header = this.socket!.read(HEADER_SIZE)
 					if (!header) return
 					
 					// check for package magic "ORGB"
@@ -141,7 +140,7 @@ export default class Client extends EventEmitter {
 					// if the packets size is bigger than what the data currently available on the socket res will be null
 					// this means, that the packet has been split in two (or potentially even more chunks)
 					// the code waits for the next `readable` event so the rest of the data is collected
-					let res = this.socket!.read(this.currentPacketLength)
+					const res = this.socket!.read(this.currentPacketLength)
 					if (!res) return
 
 					this.currentPacketLength = 0
@@ -153,15 +152,15 @@ export default class Client extends EventEmitter {
 			}
 		})
 
-		let serverProtocolVersion = await (new Promise(async (resolve, reject) => {
+		const serverProtocolVersion = await (new Promise((resolve, reject) => {
 			setTimeout(() => reject(0), timeout)
-			resolve(await this.getProtocolVersion())
+			this.getProtocolVersion().then(resolve).catch(reject)
 		}).catch(_ => _) as Promise<number>)
 
 		if (this.settings.forceProtocolVersion && serverProtocolVersion == 0) {
 			this.protocolVersion = this.settings.forceProtocolVersion
 		} else {
-			let clientVersion = ("forceProtocolVersion" in this.settings) ? this.settings.forceProtocolVersion : CLIENT_PROTOCOL_VERSION
+			const clientVersion = ("forceProtocolVersion" in this.settings) ? this.settings.forceProtocolVersion : CLIENT_PROTOCOL_VERSION
 			this.protocolVersion = (serverProtocolVersion < clientVersion!) ? serverProtocolVersion : clientVersion
 		}
 
@@ -191,7 +190,7 @@ export default class Client extends EventEmitter {
 	 * @returns {Promise<number>}
 	 */
 	async getProtocolVersion (): Promise<number> {
-		let clientVersion = ("forceProtocolVersion" in this.settings) ? this.settings.forceProtocolVersion : CLIENT_PROTOCOL_VERSION
+		const clientVersion = ("forceProtocolVersion" in this.settings) ? this.settings.forceProtocolVersion : CLIENT_PROTOCOL_VERSION
 		this.sendMessage(utils.command.requestProtocolVersion, bufferpack.pack("<I", [clientVersion]))
 		const buffer = await this.readMessage(utils.command.requestProtocolVersion)
 		return buffer.readUInt32LE()
@@ -211,8 +210,8 @@ export default class Client extends EventEmitter {
 	 * @returns {Promise<Device[]>}
 	 */
 	async getAllControllerData (): Promise<Device[]> {
-		let devices = []
-		let controllerCount = await this.getControllerCount()
+		const devices = []
+		const controllerCount = await this.getControllerCount()
 		for (let i = 0; i < controllerCount; i++) {
 			devices.push(await this.getControllerData(i))
 		}
@@ -225,11 +224,11 @@ export default class Client extends EventEmitter {
 	async getProfileList (): Promise<string[]> {
 		this.sendMessage(utils.command.requestProfileList)
 		const buffer = (await this.readMessage(utils.command.requestProfileList)).slice(4)
-		let count = buffer.readUInt16LE()
+		const count = buffer.readUInt16LE()
 		let offset = 2
-		let profiles = []
+		const profiles = []
 		for (let i = 0; i < count; i++) {
-			let length = buffer.readUInt16LE(offset)
+			const length = buffer.readUInt16LE(offset)
 			offset += 2
 			profiles.push(bufferpack.unpack(`<${length-1}c`, buffer, offset).join(""))
 			offset += length
@@ -241,7 +240,7 @@ export default class Client extends EventEmitter {
 	 * @param {string} name the name displayed in openrgb
 	 */
 	setClientName (name: string) {
-		let nameBytes = Buffer.concat([new TextEncoder().encode(name), Buffer.from([0x00])])
+		const nameBytes = Buffer.concat([new TextEncoder().encode(name), Buffer.from([0x00])])
 		this.sendMessage(utils.command.setClientName, nameBytes)
 	}
 	/**
@@ -297,7 +296,7 @@ export default class Client extends EventEmitter {
 	 * @param {RGBColor} color the color the led should be set to
 	 */
 	updateSingleLed (deviceId: number, ledId: number, color: RGBColor) {
-		let buff = Buffer.concat([bufferpack.pack("<I", [ledId]), bufferpack.pack("<BBB", [color.red, color.green, color.blue]), Buffer.alloc(1)])
+		const buff = Buffer.concat([bufferpack.pack("<I", [ledId]), bufferpack.pack("<BBB", [color.red, color.green, color.blue]), Buffer.alloc(1)])
 		this.sendMessage(utils.command.updateSingleLed, buff, deviceId)
 	}
 	/**
@@ -341,7 +340,7 @@ export default class Client extends EventEmitter {
 	 * @param {string} name the name of the new profile
 	 */
 	saveProfile (name: string) {
-		let nameBytes = Buffer.concat([new TextEncoder().encode(name), Buffer.from([0x00])])
+		const nameBytes = Buffer.concat([new TextEncoder().encode(name), Buffer.from([0x00])])
 		this.sendMessage(utils.command.saveProfile, nameBytes)
 	}
 	/**
@@ -349,7 +348,7 @@ export default class Client extends EventEmitter {
 	 * @param {string} name the name of the profile that should be loaded
 	 */
 	loadProfile (name: string) {
-		let nameBytes = Buffer.concat([new TextEncoder().encode(name), Buffer.from([0x00])])
+		const nameBytes = Buffer.concat([new TextEncoder().encode(name), Buffer.from([0x00])])
 		this.sendMessage(utils.command.loadProfile, nameBytes)
 	}
 	/**
@@ -357,7 +356,7 @@ export default class Client extends EventEmitter {
 	 * @param {string} name the name of the profile that should be deleted
 	 */
 	deleteProfile (name: string) {
-		let nameBytes = Buffer.concat([new TextEncoder().encode(name), Buffer.from([0x00])])
+		const nameBytes = Buffer.concat([new TextEncoder().encode(name), Buffer.from([0x00])])
 		this.sendMessage(utils.command.deleteProfile, nameBytes)
 	}
 	/**
@@ -385,7 +384,7 @@ export default class Client extends EventEmitter {
 		let index = buffer.write("ORGB", "ascii")
 		index = buffer.writeUInt32LE(deviceId, index)
 		index = buffer.writeUInt32LE(commandId, index)
-		index = buffer.writeUInt32LE(length, index)
+		buffer.writeUInt32LE(length, index)
 
 		return buffer
 	}
@@ -420,7 +419,7 @@ export default class Client extends EventEmitter {
 async function sendMode (this: Client, deviceId: number, mode: ModeInput | number | string, save: boolean) {
 	//TODO: shorten and beautify
 	if (typeof deviceId != "number") throw new Error("arg deviceId not given")
-	let device: Device = await this.getControllerData(deviceId)
+	const device: Device = await this.getControllerData(deviceId)
 	
 	let modeId: number | undefined, modeName: string | undefined
 
@@ -554,7 +553,7 @@ async function sendMode (this: Client, deviceId: number, mode: ModeInput | numbe
 }
 
 function resolve (this: Client, buffer: Buffer) {
-	let { deviceId, commandId } = this.decodeHeader(buffer)
+	const { deviceId, commandId } = this.decodeHeader(buffer)
 	switch (commandId) {
 		case utils.command.deviceListUpdated: {
 			this.emit("deviceListUpdated")
@@ -562,7 +561,7 @@ function resolve (this: Client, buffer: Buffer) {
 		}
 		default: {
 			if (this.resolver.length) {
-				let index = this.resolver.findIndex( resolver => resolver.deviceId == deviceId && resolver.commandId == commandId)
+				const index = this.resolver.findIndex( resolver => resolver.deviceId == deviceId && resolver.commandId == commandId)
 				if (index < 0) return
 
 				this.resolver.splice(index, 1)[0]!.resolve(buffer.slice(16))
